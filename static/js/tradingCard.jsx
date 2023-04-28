@@ -1,9 +1,61 @@
+function TradingCardContainer() {
+  const [cards, setCards] = React.useState([]); // cards = [] and React defines function and returns it for us
+
+  function addCard(newCard) {
+    // [...cards] makes a copy of cards. Similar to currentCards = cards[:] in Python
+    const currentCards = [...cards];
+    // [...currentCards, newCard] is an array containing all elements in currentCards followed by newCard
+    setCards([...currentCards, newCard]);
+  }
+
+  React.useEffect(() => {
+    fetch('/cards.json')
+    .then((response) => response.json())
+    .then((data) => setCards(data.cards))  // cards = data.cards
+  },[])
+
+
+  const tradingCards = [];
+
+  for (const currentCard of cards) {
+    tradingCards.push(
+      <TradingCard
+        key={currentCard.name}
+        name={currentCard.name}
+        skill={currentCard.skill}
+        imgUrl={currentCard.imgUrl}
+      />
+    );
+  }
+
+  return (
+    <React.Fragment>
+      <AddTradingCard addCard={addCard}/>
+      <h2>Trading Cards</h2>
+      <div className="grid">{tradingCards}</div>
+    </React.Fragment>
+  );
+}
+
 function AddTradingCard(props) {
   const [name, setName] = React.useState("");
   const [skill, setSkill] = React.useState("");
   function addNewCard() {
-    // TO BE IMPLEMENTED
-    alert('trying to add new card');
+    fetch("/add-card", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // this could also be written as body: JSON.stringify({ name, skill }) with
+      // JS object property value shorthand
+      body: JSON.stringify({ "name": name, "skill": skill })
+    })
+      .then((response) => response.json())
+      .then((jsonResponse) => {
+        // alert(`Card added! Response: ${jsonResponse}`)
+        const cardAdded = jsonResponse.cardAdded;
+        props.addCard(cardAdded);
+      });
   }
   return (
     <React.Fragment>
@@ -43,36 +95,6 @@ function TradingCard(props) {
   );
 }
 
-function TradingCardContainer() {
-  const [cards, setCards] = React.useState([]); // cards = [] and React defines function and returns it for us
 
-  React.useEffect(() => {
-    fetch('/cards.json')
-    .then((response) => response.json())
-    .then((data) => setCards(data.cards))  // cards = data.cards
-  },[])
-
-
-  const tradingCards = [];
-
-  for (const currentCard of cards) {
-    tradingCards.push(
-      <TradingCard
-        key={currentCard.name}
-        name={currentCard.name}
-        skill={currentCard.skill}
-        imgUrl={currentCard.imgUrl}
-      />
-    );
-  }
-
-  return (
-    <React.Fragment>
-      <AddTradingCard />
-      <h2>Trading Cards</h2>
-      <div className="grid">{tradingCards}</div>
-    </React.Fragment>
-  );
-}
 
 ReactDOM.render(<TradingCardContainer />, document.getElementById('container'));
